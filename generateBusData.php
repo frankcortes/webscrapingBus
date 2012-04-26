@@ -25,6 +25,15 @@
 		return $allDescriptions[$nameLine];
 	}
 	
+	function generateBusMarkers(){
+		$html = file_get_html("http://www.ambmobilitat.cat/Principales/GeneradorLineas.aspx?LIN_Id=202&VER_Id=1&ida=&Color=0158c3&Idi=3&Correspondencias=true");
+		$markers = $html->find('markers');
+		foreach($markers->children() as $mk){
+			$lat =  $mk->lat;
+			$lng =  $mk->lng;
+			echo "latitude: ".$lat." , longitude: ".$lng."\n";
+		}
+	}
 	
 	function generateBusStops($departure,$stops,$cities){
 		$currentStops = array();
@@ -195,7 +204,8 @@
 		file_put_contents($nameFile, $JSONGlobalcontent);
 	}
 	
+	generateBusMarkers();
 	//generateBusDirectionTimetable(202,17352);
-	generateAllBusData("global.json");
+	//generateAllBusData("global.json");
 	//generateBusTimetable(209);
 ?>
