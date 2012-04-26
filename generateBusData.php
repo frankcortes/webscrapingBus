@@ -25,14 +25,55 @@
 		return $allDescriptions[$nameLine];
 	}
 	
-	function generateBusMarkers(){
-		$html = file_get_html("http://www.ambmobilitat.cat/Principales/GeneradorLineas.aspx?LIN_Id=202&VER_Id=1&ida=&Color=0158c3&Idi=3&Correspondencias=true");
-		$markers = $html->find('markers');
-		foreach($markers->children() as $mk){
-			$lat =  $mk->lat;
-			$lng =  $mk->lng;
-			echo "latitude: ".$lat." , longitude: ".$lng."\n";
+	function generateBusMarkers($lineID,$cities,$markers){
+		$busMarkersRound = array();
+		$busMarkersReturn = array();
+		$xmlString = file_get_contents("http://www.ambmobilitat.cat/Principales/GeneradorLineas.aspx?LIN_Id=".$lineID."&VER_Id=1&ida=&Color=0158c3&Idi=3&Correspondencias=true");
+		$xmlContent = simplexml_load_string($xmlString);
+		foreach($xmlContent->children() as $name => $marker){
+			if($name == "marker"){
+				$par_id = strval($marker["parId"]);
+				$lat = strval($marker["lat"]);
+				$lng = strval($marker["lng"]);
+				$isReturn = strval($marker["tipoLinea"]);
+				$htmlContent = $marker["html"];
+				$htmlMarker = simplexml_load_string($htmlContent);
+				$htmlMarkerChildren = $htmlMarker->children();
+				$nameBusMarker = strval($htmlMarkerChildren[1]);
+				$directionBusMarker = strval($htmlMarkerChildren[2]);
+				$cityBusMarker = ucfirst(mb_strtolower(trim($htmlMarkerChildren[3]),'UTF-8'));
+				$cityExists = in_array($cityBusMarker,$cities);
+				//Verify if the current city exists in Global Vector.
+				if(!$cityExists){
+					array_push($cities,$cityBusMarker);
+					$indexOfCity = count($cities)-1;
+				}
+				else {
+					$indexOfCity = array_search($cityBusMarker,$cities);
+				}		
+				$stringCity = strval($indexOfCity);	
+				
+				$currentMarker = array("par_id"=>$par_id,"lat"=>$lat,"lng"=>$lng,"tipoLinea"=>$isReturn,"name"=>$nameBusMarker,"direction"=>$directionBusMarker,"city"=>$stringCity);
+				$markerExists = in_array($markers,$currentMarker);
+				//Verify if the current marker exists in Global Vector.
+				if(!$markerExists){
+					array_push($markers,$currentMarker);
+					$indexOfMarker = count($markers)-1;
+				}
+				else {
+					$indexOfMarker = array_search($currentMarker,$markers);
+				}	
+				$stringmarker = strval($indexOfMarker);
+				
+				if($isReturn == "I"){
+					array_push($busMarkersRound,$stringmarker);
+				}
+				else if($isReturn == "V"){
+					array_push($busMarkersReturn,$stringmarker);					
+				}
+			}
 		}
+		return array("round"=>$busMarkersRound,"return"=>$busMarkersReturn);
 	}
 	
 	function generateBusStops($departure,$stops,$cities){
@@ -133,7 +174,7 @@
 		return array("round"=>$scheduleRound,"return"=>$scheduleReturn);
 	}
 	
-	function generateBusData($lineID,$stops,$cities){
+	function generateBusData($lineID,$stops,$cities,$markers){
 		$html = file_get_html("http://www.ambmobilitat.cat/Principales/TiraLinea.aspx?linea=".$lineID);
 		$departure = $html->getElementById('panelTiraIda');
 		$nameBusLine = $departure->first_child();
@@ -148,7 +189,7 @@
 		//$originName = $nameBusLine->children(1)->first_child()->innertext;
 		//$endName = $nameBusLine->children(2)->first_child()->innertext;
 		$description = getDescriptionNameByLineID($nameLine);
-		echo ".";
+
 		//Calculate all busStop for this busLine.
 		$currentBusStopsRound = array(); //contains the stops for this busLine.
 		$currentBusStopsReturn = array(); //contains the stops for this busLine.
@@ -158,12 +199,16 @@
 		}
 		
 		echo ".";
+		
+		//Calculate markers for this busline...
+		$currentBusMarkers = generateBusMarkers($lineID,&$cities,&$markers);
+		echo ".";
 		//Calculate timetable for this busLine...
 		$timetableLine = generateBusTimetable($lineID);
 		
 		echo ".";
 		
-		$line = array("numLine"=>$nameLine,"description"=>$description,"busStopsRound"=>$currentBusStopsRound,"busStopsReturn"=>$currentBusStopsReturn,"timetable"=>$timetableLine);
+		$line = array("numLine"=>$nameLine,"description"=>$description,"busStopsRound"=>$currentBusStopsRound,"busStopsReturn"=>$currentBusStopsReturn,"timetable"=>$timetableLine,"markersRound"=>$currentBusMarkers["round"],"markersReturn"=>$currentBusMarkers["return"]);
 		
 		$html->clear(); 
 		unset($html);
@@ -189,23 +234,24 @@
 	}
 	
 	function generateAllBusData($nameFile){
+		$markers = array(); //contains all markers
 		$stops = array(); //contains all stops
 		$cities = array(); //contains all cities (Cornella and Gava does not work correctly.)
 		$lines = array(202,203,204,206,207,208,209,210,211,212,213,268,264,265,221,223);//getAllNumberLines();
 		$busLines = array(); //contains all busLines
 		
 		foreach($lines as $lineID){
-			$busLine = generateBusData($lineID,&$stops,&$cities);
+			$busLine = generateBusData($lineID,&$stops,&$cities,&$markers);
 			array_push($busLines,$busLine);
 		}
 		
-		$JSONGlobalcontent = json_encode(array("stops"=>$stops,"cities"=>$cities,"lines"=>$busLines));
+		$JSONGlobalcontent = json_encode(array("markers"=>$markers,"stops"=>$stops,"cities"=>$cities,"lines"=>$busLines));
 		
 		file_put_contents($nameFile, $JSONGlobalcontent);
 	}
 	
-	generateBusMarkers();
+	
 	//generateBusDirectionTimetable(202,17352);
-	//generateAllBusData("global.json");
+	generateAllBusData("global.json");
 	//generateBusTimetable(209);
 ?>
