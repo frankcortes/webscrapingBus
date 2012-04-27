@@ -55,20 +55,29 @@
 				
 				$currentMarker = array("par_id"=>$par_id,"lat"=>$lat,"lng"=>$lng,"tipoLinea"=>$isReturn,"name"=>$nameBusMarker,"direction"=>$directionBusMarker,"city"=>$stringCity);
 				$markerExists = in_array($markers,$currentMarker);
-				//Verify if the current marker exists in Global Vector.
-				if(!$markerExists){
-					array_push($markers,$currentMarker);
-					$indexOfMarker = count($markers)-1;
-				}
-				else {
-					$indexOfMarker = array_search($currentMarker,$markers);
-				}	
-				$stringmarker = strval($indexOfMarker);
 				
 				if($isReturn == "I"){
+					//Verify if the current marker exists in Global Vector.
+					if(!$markerExists){
+						array_push($markers,$currentMarker);
+						$indexOfMarker = count($markers)-1;
+					}
+					else {
+						$indexOfMarker = array_search($currentMarker,$markers);
+					}	
+					$stringmarker = strval($indexOfMarker);
 					array_push($busMarkersRound,$stringmarker);
 				}
 				else if($isReturn == "V"){
+					//Verify if the current marker exists in Global Vector.
+					if(!$markerExists){
+						array_push($markers,$currentMarker);
+						$indexOfMarker = count($markers)-1;
+					}
+					else {
+						$indexOfMarker = array_search($currentMarker,$markers);
+					}	
+					$stringmarker = strval($indexOfMarker);
 					array_push($busMarkersReturn,$stringmarker);					
 				}
 			}
@@ -201,14 +210,14 @@
 		echo ".";
 		
 		//Calculate markers for this busline...
-		$currentBusMarkers = generateBusMarkers($lineID,&$cities,&$markers);
+		//$currentBusMarkers = generateBusMarkers($lineID,&$cities,&$markers);
 		echo ".";
 		//Calculate timetable for this busLine...
 		$timetableLine = generateBusTimetable($lineID);
 		
 		echo ".";
 		
-		$line = array("numLine"=>$nameLine,"description"=>$description,"busStopsRound"=>$currentBusStopsRound,"busStopsReturn"=>$currentBusStopsReturn,"timetable"=>$timetableLine,"markersRound"=>$currentBusMarkers["round"],"markersReturn"=>$currentBusMarkers["return"]);
+		$line = array("numLine"=>$nameLine,"description"=>$description,"busStopsRound"=>$currentBusStopsRound,"busStopsReturn"=>$currentBusStopsReturn,"timetable"=>$timetableLine);//,"markersRound"=>$currentBusMarkers["round"],"markersReturn"=>$currentBusMarkers["return"]);
 		
 		$html->clear(); 
 		unset($html);
@@ -233,8 +242,8 @@
 		return $numberLines;
 	}
 	
-	function generateAllBusData($nameFile){
-		$markers = array(); //contains all markers
+	function generateAllBusData($nameFile,$markerFile){
+		//$markers = array(); //contains all markers
 		$stops = array(); //contains all stops
 		$cities = array(); //contains all cities (Cornella and Gava does not work correctly.)
 		$lines = array(202,203,204,206,207,208,209,210,211,212,213,268,264,265,221,223);//getAllNumberLines();
@@ -245,13 +254,15 @@
 			array_push($busLines,$busLine);
 		}
 		
-		$JSONGlobalcontent = json_encode(array("markers"=>$markers,"stops"=>$stops,"cities"=>$cities,"lines"=>$busLines));
+		$JSONGlobalcontent = json_encode(array("stops"=>$stops,"cities"=>$cities,"lines"=>$busLines));
+		//$JSONMarkercontent = json_encode(array("markers"=>$markers));
 		
 		file_put_contents($nameFile, $JSONGlobalcontent);
+		//file_put_contents($markerFile,$JSONMarkercontent);
 	}
 	
 	
 	//generateBusDirectionTimetable(202,17352);
-	generateAllBusData("global.json");
+	generateAllBusData("global.json","markers.json");
 	//generateBusTimetable(209);
 ?>
