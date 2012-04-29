@@ -1,6 +1,6 @@
 <?php
-	include 'simple_html_dom.php';
-	include 'gPoint.php';
+	include 'lib/simple_html_dom.php';
+	include 'lib/gPoint.php';
 	
 	define("RADIUS_EARTH",6371);
 	
@@ -14,7 +14,7 @@
 			"L86" => "Barcelona - Viladecans",
 			"L87" => "Barcelona - Viladecans",
 			"L88" => "Viladecans RENFE - Sant Climent",
-			"L94" => "Barcelona - Castelldefels",
+			"L94" => "Barcelona - Les Botigues de Sitges",
 			"L95" => "Barcelona - Castelldefels",
 			"L96" => "Castelldefels - Sant Boi",
 			"L97" => "Barcelona - Castelldefels",
@@ -135,7 +135,7 @@
 			array_push($busLinesWithMarkers[$busName],$codeID);
 		}
 		$jsonContent = json_encode(array("busMarkers" => $busMarkers,"busLinesWithMarkers" => $busLinesWithMarkers));
-		file_put_contents("markers.json",$jsonContent);	
+		file_put_contents("content/markers.json",$jsonContent);	
 		echo "busMarkers: ".count($busMarkers)."\n";
 	}
 	
@@ -316,13 +316,11 @@
 			array_push($busLines,$busLine);
 		}
 		
-		$JSONGlobalcontent = json_encode(array("stops"=>$stops,"cities"=>$cities,"lines"=>$busLines));
-		//$JSONMarkercontent = json_encode(array("markers"=>$markers));
-		
+		$JSONGlobalcontent = json_encode(array("stops"=>$stops,"cities"=>$cities,"lines"=>$busLines));		
 		file_put_contents($nameFile, $JSONGlobalcontent);
-		//file_put_contents($markerFile,$JSONMarkercontent);
 	}
 	
+	//Return the markers around a selected radius with an initial point.
 	function calculateMarkersAroundRadius($initialPointLat,$initialPointLng,$radius,$nameFile,$outputFile){
 		$initLat = deg2rad(floatval($initialPointLat));
 		$initLng = deg2rad(floatval($initialPointLng));
@@ -332,6 +330,7 @@
 		foreach($busMarkers["busMarkers"] as $busMarker){
 			$lat =  deg2rad($busMarker["marker"]["lat"]);
 			$lng =  deg2rad($busMarker["marker"]["lng"]);
+			//Calulate Distance between initial point and the current point
 			$distance = RADIUS_EARTH * acos(cos($lat)*cos($initLat)* cos($initLng - $lng) + sin($lat) * sin($initLat));
 			if($distance < $radius){
 				array_push($selectedMarkers,$busMarker);
@@ -343,9 +342,9 @@
 	
 	//---------USE CASE-----------
 	//Generate the Markers with the CSV data.
-	//generateCSVMarkers("markersContent.csv");
-	//calculateMarkersAroundRadius("41.376765466263","2.1520424580862","0.4","markers.json","selectedMarkers.json");
+	//generateCSVMarkers("content/markersContent.csv");
+	//calculateMarkersAroundRadius("41.376765466263","2.1520424580862","0.4","content/markers.json","content/selectedMarkers.json");
 	//Generate all bus data except markers.
-	//generateAllBusData("global.json","markers.json");
+	//generateAllBusData("content/global.json");
 	
 ?>
