@@ -1,8 +1,10 @@
 <?php
 	include 'simple_html_dom.php';
+	include 'gPoint.php';
 	
-	$is_gava = True;
+	define("RADIUS_EARTH",6371);
 	
+	//Get the bus name with lineID.
 	function getDescriptionNameByLineID($nameLine){
 		$allDescriptions = array(
 			"L80" => "Barcelona - Gavà",
@@ -25,66 +27,120 @@
 		return $allDescriptions[$nameLine];
 	}
 	
-	function generateBusMarkers($lineID,$cities,$markers){
-		$busMarkersRound = array();
-		$busMarkersReturn = array();
-		$xmlString = file_get_contents("http://www.ambmobilitat.cat/Principales/GeneradorLineas.aspx?LIN_Id=".$lineID."&VER_Id=1&ida=&Color=0158c3&Idi=3&Correspondencias=true");
-		$xmlContent = simplexml_load_string($xmlString);
-		foreach($xmlContent->children() as $name => $marker){
-			if($name == "marker"){
-				$par_id = strval($marker["parId"]);
-				$lat = strval($marker["lat"]);
-				$lng = strval($marker["lng"]);
-				$isReturn = strval($marker["tipoLinea"]);
-				$htmlContent = $marker["html"];
-				$htmlMarker = simplexml_load_string($htmlContent);
-				$htmlMarkerChildren = $htmlMarker->children();
-				$nameBusMarker = strval($htmlMarkerChildren[1]);
-				$directionBusMarker = strval($htmlMarkerChildren[2]);
-				$cityBusMarker = ucfirst(mb_strtolower(trim($htmlMarkerChildren[3]),'UTF-8'));
-				$cityExists = in_array($cityBusMarker,$cities);
-				//Verify if the current city exists in Global Vector.
-				if(!$cityExists){
-					array_push($cities,$cityBusMarker);
-					$indexOfCity = count($cities)-1;
-				}
-				else {
-					$indexOfCity = array_search($cityBusMarker,$cities);
-				}		
-				$stringCity = strval($indexOfCity);	
-				
-				$currentMarker = array("par_id"=>$par_id,"lat"=>$lat,"lng"=>$lng,"tipoLinea"=>$isReturn,"name"=>$nameBusMarker,"direction"=>$directionBusMarker,"city"=>$stringCity);
-				$markerExists = in_array($markers,$currentMarker);
-				
-				if($isReturn == "I"){
-					//Verify if the current marker exists in Global Vector.
-					if(!$markerExists){
-						array_push($markers,$currentMarker);
-						$indexOfMarker = count($markers)-1;
+	//Generate BusMarkers from xml files.
+	function generateBusMarkers($lineIDS,$cities,$markers){
+		foreach($lineIDS as $lineID){
+			$xmlString = file_get_contents("http://www.ambmobilitat.cat/Principales/GeneradorLineas.aspx?LIN_Id=".$lineID."&VER_Id=1&ida=&Color=0158c3&Idi=3&Correspondencias=true");
+			$xmlContent = simplexml_load_string($xmlString);
+			foreach($xmlContent->children() as $name => $marker){
+				if($name == "marker"){
+					//obtain the basic data of the marker.
+					$par_id = strval($marker["parId"]);
+					$lat = strval($marker["lat"]);
+					$lng = strval($marker["lng"]);
+					$isReturn = strval($marker["tipoLinea"]);
+					$htmlContent = $marker["html"];
+					$htmlMarker = simplexml_load_string($htmlContent);
+					$htmlMarkerChildren = $htmlMarker->children();
+					$nameBusMarker = strval($htmlMarkerChildren[1]);
+					//$directionBusMarker = strval($htmlMarkerChildren[2]);
+					$cityBusMarker = ucfirst(mb_strtolower(trim($htmlMarkerChildren[3]),'UTF-8'));
+					$cityExists = in_array($cityBusMarker,$cities);
+					//Verify if the current city exists in Global Vector.
+					if(!$cityExists){
+						array_push($cities,$cityBusMarker);
+						$indexOfCity = count($cities)-1;
 					}
 					else {
-						$indexOfMarker = array_search($currentMarker,$markers);
-					}	
-					$stringmarker = strval($indexOfMarker);
-					array_push($busMarkersRound,$stringmarker);
-				}
-				else if($isReturn == "V"){
-					//Verify if the current marker exists in Global Vector.
-					if(!$markerExists){
-						array_push($markers,$currentMarker);
-						$indexOfMarker = count($markers)-1;
+						$indexOfCity = array_search($cityBusMarker,$cities);
+					}		
+					$stringCity = strval($indexOfCity);	
+					
+					//Obtains the lines with the bus collided.
+					$lines = $htmlMarkerChildren[5];
+					$ulLines = $lines->children();
+					if(count($ulLines) < 0) continue;
+					$ulLines = $ulLines[0];
+					$correspondLines = array();
+					foreach($ulLines as $li){
+						$a = $li->children();
+						$a = $a[0];
+						array_push($a,$correspondLines);
 					}
-					else {
-						$indexOfMarker = array_search($currentMarker,$markers);
-					}	
-					$stringmarker = strval($indexOfMarker);
-					array_push($busMarkersReturn,$stringmarker);					
+					
+					$currentMarker = array("par_id"=>$par_id,"lat"=>$lat,"lng"=>$lng,"tipoLinea"=>$isReturn,"name"=>$nameBusMarker,"city"=>$stringCity,"lines"=>$correspondLines);
+					
+					$markerExists = in_array($markers,$currentMarker);
+					
+					if($isReturn == "I"){
+						//Verify if the current marker exists in Global Vector.
+						if(!$markerExists){
+							array_push($markers,$busMarkers);
+						}
+					}
+					else if($isReturn == "V"){
+						//Verify if the current marker exists in Global Vector.
+						if(!$markerExists){
+							array_push($markers,$busMarkers);
+						}
+					}
 				}
 			}
 		}
-		return array("round"=>$busMarkersRound,"return"=>$busMarkersReturn);
+		return $busMarkers;
 	}
 	
+	//generate busMarkers from manual CSV data.
+	function generateCSVMarkers($nameFile){
+		$csvContent = file_get_contents($nameFile);
+		$csvContent = explode("\n",$csvContent);
+		$busMarkers = array();
+		$busLinesWithMarkers = array();
+		foreach($csvContent as $line){
+			$lineArray = explode(";",$line);
+			$city = ucfirst(mb_strtolower(trim($lineArray[0]),'UTF-8'));
+			$codeID = strval($lineArray[2]);
+			$name = ucfirst(mb_strtolower(trim($lineArray[3]),'UTF-8'));
+			$utmX = $lineArray[4];
+			$utmY = $lineArray[5];
+			$busName = $lineArray[6];
+			$busDirection = trim($lineArray[7]);
+			
+			$gPoint =& new gPoint('WGS 84');
+			$gPoint->setUTM($utmX,$utmY,"31T"); 
+			$gPoint->convertTMtoLL();	
+			$busMarker = array(
+			"city" => $city,
+			"name" => $name,
+			"lat" => strval($gPoint->lat),
+			"lng" => strval($gPoint->long)
+			);
+			$markerExists = isset($busMarkers[$codeID]);
+			if(!$markerExists){
+				$busMarkers[$codeID] = array(
+					"busLines" => array($busName => array($busDirection)),
+					"marker" => $busMarker);
+			}
+			else {
+				$busMarkersExists = isset($busMarkers[$codeID]["busLines"][$busName]);
+				if(!$busMarkersExists){
+					$busMarkers[$codeID]["busLines"][$busName] = array();
+				}
+				array_push($busMarkers[$codeID]["busLines"][$busName],$busDirection);
+			}
+			$busNameExists = isset($busLinesWithMarkers[$busName]);
+			if(!$busNameExists){
+				$busLinesWithMarkers[$busName] = array();
+			}
+			array_push($busLinesWithMarkers[$busName],$codeID);
+		}
+		$jsonContent = json_encode(array("busMarkers" => $busMarkers,"busLinesWithMarkers" => $busLinesWithMarkers));
+		file_put_contents("markers.json",$jsonContent);	
+		echo "busMarkers: ".count($busMarkers)."\n";
+	}
+	
+	
+	//Generate busStops from content.
 	function generateBusStops($departure,$stops,$cities){
 		$currentStops = array();
 		//Calculate busStops for this busLine.
@@ -120,6 +176,7 @@
 		return $currentStops;
 	}
 	
+	//Check if text contains a hour in the first word.
 	function containsHour($text){
 		$words = explode(" ", $text);
 		$posibleHour = $words[0];
@@ -127,6 +184,7 @@
 		return ($isHour == 1);
 	}
 	
+	//Generate timetable from 1 bus and 1 direction.
 	function generateBusDirectionTimetable($lineID,$nameStopRound){
 		$ddArray = array();
 		$versionsArray = array(1,4,6,3,2); //sort by relevance
@@ -171,6 +229,7 @@
 		return $ddArray;
 	}
 	
+	//Generate timetable for 1 bus.
 	function generateBusTimetable($lineID){
 		$timetable = array();
 		$html = file_get_html("http://www.ambmobilitat.cat/Principales/TiraLinea.aspx?linea=".$lineID."&horarios=true");
@@ -183,6 +242,7 @@
 		return array("round"=>$scheduleRound,"return"=>$scheduleReturn);
 	}
 	
+	//generate all data from 1 bus.
 	function generateBusData($lineID,$stops,$cities,$markers){
 		$html = file_get_html("http://www.ambmobilitat.cat/Principales/TiraLinea.aspx?linea=".$lineID);
 		$departure = $html->getElementById('panelTiraIda');
@@ -227,6 +287,7 @@
 		return $line;
 	}
 	
+	//return a set of all lineIDs.
 	function getAllNumberLines(){
 		$html = file_get_html("http://www.ambmobilitat.cat/Principales/BusquedaLinea.aspx");
 		$selectNumberLines = $html->getElementById('ddlLineas');
@@ -242,7 +303,8 @@
 		return $numberLines;
 	}
 	
-	function generateAllBusData($nameFile,$markerFile){
+	//generate all information about the selected lineIDs.
+	function generateAllBusData($nameFile){
 		//$markers = array(); //contains all markers
 		$stops = array(); //contains all stops
 		$cities = array(); //contains all cities (Cornella and Gava does not work correctly.)
@@ -261,8 +323,29 @@
 		//file_put_contents($markerFile,$JSONMarkercontent);
 	}
 	
+	function calculateMarkersAroundRadius($initialPointLat,$initialPointLng,$radius,$nameFile,$outputFile){
+		$initLat = deg2rad(floatval($initialPointLat));
+		$initLng = deg2rad(floatval($initialPointLng));
+		$selectedMarkers = array();	
+		$JSONMarkerContent = file_get_contents($nameFile);
+		$busMarkers = json_decode($JSONMarkerContent, true);
+		foreach($busMarkers["busMarkers"] as $busMarker){
+			$lat =  deg2rad($busMarker["marker"]["lat"]);
+			$lng =  deg2rad($busMarker["marker"]["lng"]);
+			$distance = RADIUS_EARTH * acos(cos($lat)*cos($initLat)* cos($initLng - $lng) + sin($lat) * sin($initLat));
+			if($distance < $radius){
+				array_push($selectedMarkers,$busMarker);
+			}
+		}
+		$JSONMarkerContent = json_encode($selectedMarkers);
+		file_put_contents($outputFile,$JSONMarkerContent);
+	}
 	
-	//generateBusDirectionTimetable(202,17352);
-	generateAllBusData("global.json","markers.json");
-	//generateBusTimetable(209);
+	//---------USE CASE-----------
+	//Generate the Markers with the CSV data.
+	//generateCSVMarkers("markersContent.csv");
+	calculateMarkersAroundRadius("41.376765466263","2.1520424580862","0.4","markers.json","selectedMarkers.json");
+	//Generate all bus data except markers.
+	//generateAllBusData("global.json","markers.json");
+	
 ?>
