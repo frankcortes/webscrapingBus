@@ -17,16 +17,15 @@ function URIParser($uriRequest){
 			break;
 		case 'markersWithRadius':
 			echo "Marker Round a selected radius.\n";
-			$lat = "41.376765466263";//$uriArray[3];
-			$lng = "2.1520424580862";//$uriArray[4];
-			$radius = "0.4";//$uriArray[5];
-			$inputNameFile = "content/markers.json"//$uriArray[6];
-			$outputNameFile = "content/selectedMarkers.json"//$uriArray[7];
-			calculateMarkersAroundRadius($lat,$lng,$radius,$inputNameFile,$outputNameFile);
+			$lat = $uriArray[3]; //"41.376765466263";
+			$lng = $uriArray[4]; //"2.1520424580862";
+			$radius = $uriArray[5]; //"0.4";
+			$inputNameFile = "markers.json"; //"content/markers.json";
+			$outputNameFile = $uriArray[7]; //"content/selectedMarkers.json";
+			calculateMarkersAroundRadius($lat,$lng,$radius,"content/".$inputNameFile);
 			break;
 	}
 }
 
-//curl localhost:8888/apiBus.php/refresh
 URIParser($_SERVER["REQUEST_URI"]);
 ?>

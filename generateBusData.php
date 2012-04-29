@@ -236,10 +236,10 @@
 		$html = file_get_html("http://www.ambmobilitat.cat/Principales/TiraLinea.aspx?linea=".$lineID."&horarios=true");
 		$nameStopRound = $html->getElementById('ddlParadasIda')->children(0)->value;
 		$nameStopReturn = $html->getElementById('ddlParadasVuelta')->children(0)->value;		
-		$html->clear();
-		unset($html);
 		$scheduleRound = generateBusDirectionTimetable($lineID,$nameStopRound);
 		$scheduleReturn = generateBusDirectionTimetable($lineID,$nameStopReturn);
+		$html->clear();
+		unset($html);
 		return array("round"=>$scheduleRound,"return"=>$scheduleReturn);
 	}
 	
@@ -322,7 +322,7 @@
 	}
 	
 	//Return the markers around a selected radius with an initial point.
-	function calculateMarkersAroundRadius($initialPointLat,$initialPointLng,$radius,$nameFile,$outputFile){
+	function calculateMarkersAroundRadius($initialPointLat,$initialPointLng,$radius,$nameFile){
 		$initLat = deg2rad(floatval($initialPointLat));
 		$initLng = deg2rad(floatval($initialPointLng));
 		$selectedMarkers = array();	
@@ -338,7 +338,7 @@
 			}
 		}
 		$JSONMarkerContent = json_encode($selectedMarkers);
-		file_put_contents($outputFile,$JSONMarkerContent);
+		echo $JSONMarkerContent;
 	}
 	
 	//---------USE CASE-----------
