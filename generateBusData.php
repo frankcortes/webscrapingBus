@@ -344,7 +344,7 @@
 	//---------USE CASE-----------
 	//Generate the Markers with the CSV data.
 	//generateCSVMarkers("markersContent.csv");
-	calculateMarkersAroundRadius("41.376765466263","2.1520424580862","0.4","markers.json","selectedMarkers.json");
+	//calculateMarkersAroundRadius("41.376765466263","2.1520424580862","0.4","markers.json","selectedMarkers.json");
 	//Generate all bus data except markers.
 	//generateAllBusData("global.json","markers.json");
 	
