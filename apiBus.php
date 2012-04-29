@@ -1,6 +1,6 @@
 <?php
 
-include "generateBusData.php";
+require("generateBusData.php");
 
 //Parser the current URI.
 function URIParser($uriRequest){
@@ -27,5 +27,6 @@ function URIParser($uriRequest){
 	}
 }
 
+//curl localhost:8888/apiBus.php/refresh
 URIParser($_SERVER["REQUEST_URI"]);
 ?>

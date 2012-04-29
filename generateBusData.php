@@ -1,4 +1,5 @@
 <?php
+	ini_set("memory_limit","150M");
 	include 'lib/simple_html_dom.php';
 	include 'lib/gPoint.php';
 	
@@ -235,10 +236,10 @@
 		$html = file_get_html("http://www.ambmobilitat.cat/Principales/TiraLinea.aspx?linea=".$lineID."&horarios=true");
 		$nameStopRound = $html->getElementById('ddlParadasIda')->children(0)->value;
 		$nameStopReturn = $html->getElementById('ddlParadasVuelta')->children(0)->value;		
-		$scheduleRound = generateBusDirectionTimetable($lineID,$nameStopRound);
-		$scheduleReturn = generateBusDirectionTimetable($lineID,$nameStopReturn);
 		$html->clear();
 		unset($html);
+		$scheduleRound = generateBusDirectionTimetable($lineID,$nameStopRound);
+		$scheduleReturn = generateBusDirectionTimetable($lineID,$nameStopReturn);
 		return array("round"=>$scheduleRound,"return"=>$scheduleReturn);
 	}
 	
