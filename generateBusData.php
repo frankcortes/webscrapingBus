@@ -93,6 +93,8 @@
 	
 	//generate busMarkers from manual CSV data.
 	function generateCSVMarkers($nameFile){
+		$errLat = 5 * 1e-6;
+		$errLng = 3 * 1e-6;
 		$csvContent = file_get_contents($nameFile);
 		$csvContent = explode("\n",$csvContent);
 		$busMarkers = array();
@@ -113,8 +115,9 @@
 			$busMarker = array(
 			"city" => $city,
 			"name" => $name,
-			"lat" => strval($gPoint->lat),
-			"lng" => strval($gPoint->long)
+			"lat" => strval($gPoint->lat + $errLat),
+			"lng" => strval($gPoint->long  + $errLng),
+			"codeID" => $codeID
 			);
 			$markerExists = isset($busMarkers[$codeID]);
 			if(!$markerExists){
