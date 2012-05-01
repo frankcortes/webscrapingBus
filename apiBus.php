@@ -6,7 +6,7 @@ require("generateBusData.php");
 function URIParser($uriRequest){
 	$folder = "content/";
 	$uriArray = explode("/",$uriRequest);
-	$command = $uriArray[2];
+	$command = $uriArray[3];
 	switch($command){
 		case 'refresh':
 			//echo "refresh the busLines API.\n";
@@ -17,10 +17,9 @@ function URIParser($uriRequest){
 			generateCSVMarkers($folder."markersContent.csv");
 			break;
 		case 'markersWithRadius':
-			//echo "Marker Round a selected radius.\n";
-			$lat = $uriArray[3]; //"41.376765466263";
-			$lng = $uriArray[4]; //"2.1520424580862";
-			$radius = $uriArray[5]; //"0.4";
+			$lat = $uriArray[4]; //"41.376765466263";
+			$lng = $uriArray[5]; //"2.1520424580862";
+			$radius = $uriArray[6]; //"0.4";
 			$inputNameFile = "markers.json"; //"content/markers.json";
 			calculateMarkersAroundRadius($lat,$lng,$radius,$folder.$inputNameFile);
 			break;

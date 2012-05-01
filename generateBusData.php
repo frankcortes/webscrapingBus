@@ -107,7 +107,7 @@
 			$busName = $lineArray[6];
 			$busDirection = trim($lineArray[7]);
 			
-			$gPoint =& new gPoint('WGS 84');
+			$gPoint = new gPoint('WGS 84');
 			$gPoint->setUTM($utmX,$utmY,"31T"); 
 			$gPoint->convertTMtoLL();	
 			$busMarker = array(
@@ -119,15 +119,11 @@
 			$markerExists = isset($busMarkers[$codeID]);
 			if(!$markerExists){
 				$busMarkers[$codeID] = array(
-					"busLines" => array($busName => array($busDirection)),
+					"busLines" => array(array("name" => $busName , "directions" => array($busDirection))),
 					"marker" => $busMarker);
 			}
 			else {
-				$busMarkersExists = isset($busMarkers[$codeID]["busLines"][$busName]);
-				if(!$busMarkersExists){
-					$busMarkers[$codeID]["busLines"][$busName] = array();
-				}
-				array_push($busMarkers[$codeID]["busLines"][$busName],$busDirection);
+				array_push($busMarkers[$codeID]["busLines"],array("name" => $busName , "directions" => array($busDirection)));
 			}
 			$busNameExists = isset($busLinesWithMarkers[$busName]);
 			if(!$busNameExists){
