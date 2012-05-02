@@ -324,7 +324,7 @@
 	function getAllBusData($nameFile,$fileID){
 		$fileVersionID = md5_file($nameFile);
 		if($fileVersionID == $fileID){
-			echo array("Update" => "OK");
+			echo json_encode(array("Update" => "OK"));
 		}
 		else {
 			$JSONBusDatacontent = file_get_contents($nameFile);
