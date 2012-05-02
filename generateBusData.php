@@ -320,6 +320,18 @@
 		file_put_contents($nameFile, $JSONGlobalcontent);
 	}
 	
+	//Return all bus Data
+	function getAllBusData($nameFile,$fileID){
+		$fileVersionID = md5_file($nameFile);
+		if($fileVersionID == $fileID){
+			echo array("Update" => "OK");
+		}
+		else {
+			$JSONBusDatacontent = file_get_contents($nameFile);
+			echo $JSONBusDatacontent;
+		}
+	}
+	
 	//Return the markers around a selected radius with an initial point.
 	function calculateMarkersAroundRadius($initialPointLat,$initialPointLng,$radius,$nameFile){
 		$initLat = deg2rad(floatval($initialPointLat));

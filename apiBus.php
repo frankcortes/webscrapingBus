@@ -12,6 +12,11 @@ function URIParser($uriRequest){
 			//echo "refresh the busLines API.\n";
 			generateAllBusData($folder."global.json");
 			break;
+		case 'getBusData':
+			$fileID = $uriArray[4]; //md5sum if file 
+			//echo "return all bus data.\n";
+			getAllBusData($folder."global.json",$fileID);
+			break;
 		case 'generateMarker':
 			//echo "generate Markers with CSV data.\n";
 			generateCSVMarkers($folder."markersContent.csv");
