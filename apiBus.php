@@ -13,7 +13,7 @@ function URIParser($uriRequest){
 			generateAllBusData($folder."global.json");
 			break;
 		case 'getBusData':
-			$fileID = $uriArray[4]; //md5sum if file 
+			$fileID = $uriArray[4]; //md5sum if any 
 			//echo "return all bus data.\n";
 			getAllBusData($folder."global.json",$fileID);
 			break;

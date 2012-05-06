@@ -321,7 +321,7 @@
 	}
 	
 	//Return all bus Data
-	function getAllBusData($nameFile,$fileID){
+	function getAllBusData($nameFile,$fileID=""){
 		$fileVersionID = md5_file($nameFile);
 		if($fileVersionID == $fileID){
 			echo json_encode(array("Update" => "OK"));
