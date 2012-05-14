@@ -28,6 +28,14 @@ function URIParser($uriRequest){
 			$inputNameFile = "markers.json"; //"content/markers.json";
 			calculateMarkersAroundRadius($lat,$lng,$radius,$folder.$inputNameFile);
 			break;
+		case 'markersWithBusLine':
+			$numLine = $uriArray[4]; //N14
+			echo $numLine;
+			$inputNameFile = "markers.json"; //"content/markers.json";
+			calculateMarkersWithBusLine($numLine,$folder.$inputNameFile);
+			break;
+		default:
+			break;
 	}
 }
 

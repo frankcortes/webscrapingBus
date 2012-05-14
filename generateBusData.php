@@ -352,6 +352,22 @@
 		echo $JSONMarkerContent;
 	}
 	
+	//Return the markers that contains a specific busLine.
+	function calculateMarkersWithBusLine($busLine,$nameFile){
+		$selectedMarkers = array();	
+		$JSONMarkerContent = file_get_contents($nameFile);
+		$busMarkers = json_decode($JSONMarkerContent, true);
+		if(isset($busMarkers["busLinesWithMarkers"][$busLine])){
+			foreach($busMarkers["busLinesWithMarkers"][$busLine] as $busStopCode){
+				if(isset($busMarkers["busMarkers"][$busStopCode])){
+					$busStopData = $busMarkers["busMarkers"][$busStopCode];
+					array_push($selectedMarkers,$busStopData);
+				}
+			}
+		}
+		$JSONMarkerContent = json_encode($selectedMarkers);
+		echo $JSONMarkerContent;				
+	}
 	//---------USE CASE-----------
 	//Generate the Markers with the CSV data.
 	//generateCSVMarkers("content/markersContent.csv");
