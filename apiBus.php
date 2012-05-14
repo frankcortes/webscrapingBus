@@ -30,7 +30,6 @@ function URIParser($uriRequest){
 			break;
 		case 'markersWithBusLine':
 			$numLine = $uriArray[4]; //N14
-			echo $numLine;
 			$inputNameFile = "markers.json"; //"content/markers.json";
 			calculateMarkersWithBusLine($numLine,$folder.$inputNameFile);
 			break;
