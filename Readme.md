@@ -6,23 +6,23 @@
 
 Execute the apiBus.php from curl with these methods:
 
-### refresh
+### /refresh
 
 Refresh the busLines API. Webscraping returns to be realised.
 
-### getBusData (fileID)
+### /getBusData/fileID
 
 Checks if the initial fileID is the same that the current file. If this ocurrs, then returns the new content.
 
-### generateMarker
+### /generateMarker
 
 Generate Markers with the disponibled CSV data.
 
-### markersWithRadius (lat,lng,radius,inputNameFile)
+### /markersWithRadius/lat/lng/radius/inputNameFile
 
 Return a list of markers indicating latitude and longitude, and a concrete radius.
 
-### markersWithBusline(numLine,inputNameFile)
+### /markersWithBusline/numLine/inputNameFile
 Return a list of markers indicating the numLine that contains them.
 
 
